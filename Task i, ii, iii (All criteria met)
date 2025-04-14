@@ -1,0 +1,42 @@
+/* Filename: Lab 7.cpp
+Author: Brandon Mills Jacinto
+Date: 26/03/2025
+*/
+
+#include "mbed.h" // Mbed Library for hardware control
+
+AnalogIn low_pass_filter_output(A0); // Analog input for the low-pass filtered signal (connected to pin A0)   
+AnalogIn ldr_input(A1); // Analog input for the raw LDR (Light Dependent Resistor) signal (connected to pin A1)
+PwmOut led_red(PD_12); // PWM output for controlling the red LED (connected to pin PD_12)
+
+UnbufferedSerial serial(USBTX, USBRX, 115200); // Serial communication  for sending data via USB (115200 baud rate) to serial terminal
+
+int main() {
+    led_red.period(0.001f); // Set the PWM period for the red LED to 1ms (1kHz frequency)
+    printf("LDR Analog Read with Hardware Low-Pass Filter\n"); // Print a message to the serial terminal
+
+    while (true) { // Infinite loop
+        float raw_value = ldr_input.read(); // Read the raw analog value from the LDR
+        float filtered_value = low_pass_filter_output.read(); // Read the filtered analog value
+        
+        printf("Raw: %.2f (%.2fV), Filtered: %.2f (%.2fV)\n",
+               raw_value, raw_value * 3.3, filtered_value, filtered_value * 3.3);  // Print raw and filtered values to the serial terminal
+    
+  // Determine LED brightness based on LDR input
+        if (raw_value > 0.8) { // If raw value is greater than 0.8 (high light level)
+            led_red.write(1.0); // Set LED to maximum brightness
+        } else if (raw_value > 0.6) { // If raw value is greater than 0.6
+            led_red.write(0.8); // Set LED to 80% brightness
+        } else if (raw_value > 0.5) { // If raw value is greater than 0.5
+            led_red.write(0.6); // Set LED to 60% brightness
+        } else if (raw_value > 0.4) { // If raw value is greater than 0.4
+            led_red.write(0.4); // Set LED to 40% brightness
+        } else if (raw_value > 0.2) { // If raw value is greater than 0.2
+            led_red.write(0.2); // Set LED to 20% brightness
+        } else { // If raw value is less than or equal to 0.2 (low light level)
+            led_red.write(0.0); // Turn off the LED
+        }
+
+        ThisThread::sleep_for(100ms); // Delay for 100ms
+    }
+}
